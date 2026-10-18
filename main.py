@@ -1,18 +1,17 @@
 
-import pandas as pd
+from pathlib import Path
+import subprocess
+import sys
 
-# Load the hotel booking dataset
-df = pd.read_csv("data/H2.csv")
+def main():
+    project_dir = Path(__file__).resolve().parent
+    eda_script = project_dir / "outputs" / "eda.py"
 
-# Display basic information
-print("Dataset loaded successfully!")
-print("Dataset shape:", df.shape)
+    subprocess.run(
+        [sys.executable, str(eda_script)],
+        cwd=project_dir,
+        check=True
+    )
 
-print("\nFirst 5 rows:")
-print(df.head())
-
-print("\nColumn names:")
-print(df.columns.tolist())
-
-print("\nMissing values:")
-print(df.isnull().sum())
+if __name__ == "__main__":
+    main()
