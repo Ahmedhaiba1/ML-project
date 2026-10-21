@@ -1,0 +1,14 @@
+,unique_values
+ArrivalDateMonth,12
+Meal,4
+Country,166
+MarketSegment,8
+DistributionChannel,5
+ReservedRoomType,8
+AssignedRoomType,9
+DepositType,3
+Agent,224
+Company,208
+CustomerType,4
+ReservationStatus,3
+ReservationStatusDate,864

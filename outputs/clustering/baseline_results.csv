@@ -1,0 +1,4 @@
+algorithm,settings,rows_used,n_clusters,silhouette,davies_bouldin,smallest_cluster_pct,train_time_s,cluster_sizes
+K-Means,"k=3, n_init=10",53039,3,0.1915,1.615,0.69,3.79,"{0: 36568, 1: 16107, 2: 364}"
+Agglomerative,"k=3, linkage=ward",10000,3,0.2757,1.1453,0.74,8.5,"{0: 8990, 1: 74, 2: 936}"
+GMM,"components=3, covariance=diag",53039,3,0.1795,2.8683,7.19,2.59,"{0: 3812, 1: 11345, 2: 37882}"

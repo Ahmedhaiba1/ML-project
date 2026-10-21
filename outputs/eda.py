@@ -1,83 +1,92 @@
 
+from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
-from pathlib import Path
+import seaborn as sns
 
-# 1. Define file paths
-DATA_PATH = Path("data/H2.csv")
-OUTPUT_PATH = Path("outputs/eda")
+# 1. Locate project and dataset
+PROJECT_DIR = Path(__file__).resolve().parent.parent
+DATA_FILE = PROJECT_DIR / "data" / "H2.csv"
 
-# 2. Create the output folder if it does not exist
-OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
+# 2. Read original dataset (no cleaning)
+df = pd.read_csv(DATA_FILE)
 
-# 3. Load the dataset
-df = pd.read_csv(DATA_PATH)
+# 3. Create folder for EDA results
+OUTPUT_DIR = PROJECT_DIR / "outputs" / "eda"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# 4. Display dataset information
 print("=" * 50)
-print("DATASET OVERVIEW")
+print("EDA - EXPLORATORY DATA ANALYSIS")
 print("=" * 50)
 
-print("Shape:", df.shape)
-print("\nFirst 5 rows:")
-print(df.head())
+# 4. Dataset overview
+print("\nDATASET SHAPE")
+print(df.shape)
 
-print("\nColumn names:")
-print(df.columns.tolist())
+print("\nDATA TYPES")
+print(df.dtypes)
 
-print("\nData types and non-missing values:")
-df.info()
+# 5. Missing values
+print("\nMISSING VALUES")
+print(df.isna().sum().sort_values(ascending=False))
 
-# 5. Check missing values
-missing = df.isnull().sum().sort_values(ascending=False)
+# 6. Numerical summary
+numerical_columns = df.select_dtypes(include="number").columns
 
-print("\nMissing values per column:")
-print(missing[missing > 0])
+print("\nNUMERICAL SUMMARY")
+print(df[numerical_columns].describe().T.round(2))
 
-# Save missing-value report
-missing.to_csv(OUTPUT_PATH / "missing_values.csv")
+# 7. Categorical summary
+categorical_columns = df.select_dtypes(
+    include=["object", "category"]
+).columns
 
-# 6. Check duplicate rows
-duplicates = df.duplicated().sum()
-print("\nDuplicate rows:", duplicates)
+print("\nCATEGORICAL CARDINALITY")
+print(df[categorical_columns].nunique().sort_values(ascending=False))
 
-# 7. Generate descriptive statistics
-print("\nNumerical statistics:")
-print(df.describe().T)
+# 8. Plot numerical distributions
+features = [
+    "LeadTime",
+    "ADR",
+    "StaysInWeekendNights",
+    "StaysInWeekNights",
+    "Adults",
+    "Children",
+    "Babies",
+    "TotalOfSpecialRequests",
+]
 
-df.describe(include="all").T.to_csv(
-    OUTPUT_PATH / "data_summary.csv"
+for feature in features:
+    plt.figure(figsize=(8, 4))
+    sns.histplot(data=df, x=feature, bins=40)
+    plt.title(f"Distribution of {feature}")
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / f"{feature}_histogram.png")
+    plt.close()
+
+# 9. Plot boxplots to investigate outliers
+for feature in ["ADR", "LeadTime"]:
+    plt.figure(figsize=(8, 4))
+    sns.boxplot(data=df, x=feature)
+    plt.title(f"Boxplot of {feature}")
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / f"{feature}_boxplot.png")
+    plt.close()
+
+# 10. Categorical frequency tables
+for feature in ["Meal", "MarketSegment", "CustomerType", "DepositType"]:
+    print(f"\nTOP VALUES IN {feature}")
+    print(df[feature].value_counts(dropna=False).head(15))
+
+# 11. Save summary tables
+df[numerical_columns].describe().T.to_csv(
+    OUTPUT_DIR / "numerical_summary.csv"
 )
 
-# 8. Check regression target
-if "ADR" in df.columns:
-    print("\nADR statistics:")
-    print(df["ADR"].describe())
+df[categorical_columns].nunique().to_csv(
+    OUTPUT_DIR / "categorical_cardinality.csv",
+    header=["unique_values"]
+)
 
-    df["ADR"].hist(bins=40)
-    plt.title("ADR Distribution")
-    plt.xlabel("ADR")
-    plt.ylabel("Number of Bookings")
-    plt.tight_layout()
-    plt.savefig(OUTPUT_PATH / "adr_distribution.png")
-    plt.close()
-
-# 9. Check classification target
-if "IsCanceled" in df.columns:
-    print("\nCancellation distribution:")
-    print(df["IsCanceled"].value_counts(dropna=False))
-
-    df["IsCanceled"].value_counts().sort_index().plot(
-        kind="bar"
-    )
-    plt.title("Booking Cancellation Distribution")
-    plt.xlabel("IsCanceled (0 = Not canceled, 1 = Canceled)")
-    plt.ylabel("Number of Bookings")
-    plt.tight_layout()
-    plt.savefig(
-        OUTPUT_PATH / "cancellation_distribution.png"
-    )
-    plt.close()
-
-print("\nEDA completed successfully!")
-print("Reports and plots saved in outputs/eda/")
+print("\nEDA completed successfully.")
+print(f"Results saved in: {OUTPUT_DIR}")
